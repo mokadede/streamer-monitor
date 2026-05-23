@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { ArrowUp, Radio, Clock } from 'lucide-react';
 import type { StreamData } from './types';
 import StreamCard from './components/StreamCard';
@@ -14,17 +14,10 @@ export default function GroupPage({
   streams?: StreamData[];
   onBack?: () => void;
 }) {
-  const [liveStatus, setLiveStatus] = useState<Record<string, 'LIVE' | 'VOD' | 'OFFLINE'>>({});
+  const [filter, setFilter] = useState<'all' | 'live' | 'vod'>('all');
 
-  const handleLiveStatus = useCallback((id: string, status: 'LIVE' | 'VOD' | 'OFFLINE') => {
-    setLiveStatus(prev => {
-      if (prev[id] === status) return prev;
-      return { ...prev, [id]: status };
-    });
-  }, []);
-
-  const totalLive = Object.values(liveStatus).filter(s => s === 'LIVE').length;
-  const totalVod = Object.values(liveStatus).filter(s => s === 'VOD').length;
+  const totalLive = streams.filter(s => s.yt_video_id && s.yt_is_live).length;
+  const totalVod = streams.filter(s => s.yt_video_id && !s.yt_is_live).length;
 
   return (
     <section
@@ -108,42 +101,50 @@ export default function GroupPage({
               </span>
             </div>
 
-            {/* Stats pills */}
+            {/* Stats pills — klik untuk filter */}
             <div style={{ display: 'flex', gap: 10 }}>
-              <div
+              <button
+                onClick={() => setFilter(prev => prev === 'live' ? 'all' : 'live')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 8,
                   padding: '8px 16px',
                   borderRadius: 999,
-                  background: 'rgba(239,68,68,0.12)',
-                  border: '1px solid rgba(239,68,68,0.25)',
+                  background: filter === 'live' ? 'rgba(239,68,68,0.35)' : 'rgba(239,68,68,0.12)',
+                  border: filter === 'live' ? '1.5px solid rgba(239,68,68,0.7)' : '1px solid rgba(239,68,68,0.25)',
+                  cursor: 'pointer',
+                  transition: 'all 200ms ease',
+                  transform: filter === 'live' ? 'scale(1.05)' : 'scale(1)',
                 }}
               >
                 <Radio size={14} color="#ef4444" className="animate-pulse" />
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#fca5a5' }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: filter === 'live' ? '#fff' : '#fca5a5' }}>
                   {totalLive} Live
                 </span>
-              </div>
+              </button>
 
-              {/* VOD Counter */}
-              <div
+              {/* VOD Filter */}
+              <button
+                onClick={() => setFilter(prev => prev === 'vod' ? 'all' : 'vod')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 8,
                   padding: '8px 16px',
                   borderRadius: 999,
-                  background: 'rgba(75,85,99,0.2)',
-                  border: '1px solid rgba(75,85,99,0.3)',
+                  background: filter === 'vod' ? 'rgba(75,85,99,0.45)' : 'rgba(75,85,99,0.2)',
+                  border: filter === 'vod' ? '1.5px solid rgba(156,163,175,0.6)' : '1px solid rgba(75,85,99,0.3)',
+                  cursor: 'pointer',
+                  transition: 'all 200ms ease',
+                  transform: filter === 'vod' ? 'scale(1.05)' : 'scale(1)',
                 }}
               >
-                <Clock size={14} color="#9ca3af" />
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#d1d5db' }}>
+                <Clock size={14} color={filter === 'vod' ? '#e5e7eb' : '#9ca3af'} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: filter === 'vod' ? '#fff' : '#d1d5db' }}>
                   {totalVod} VOD
                 </span>
-              </div>
+              </button>
 
               <div
                 style={{
@@ -181,20 +182,40 @@ export default function GroupPage({
             gap: 28,
           }}
         >
-          {streams.length === 0 ? (
-            <div className="col-span-full py-20 text-center text-gray-500 font-medium">
-              Tidak ada data terbaru...
-            </div>
-          ) : (
-            streams.map((stream) => (
+          {(() => {
+            const filteredStreams = streams.filter((stream) => {
+              if (filter === 'all') return true;
+              const isLive = stream.yt_video_id && stream.yt_is_live;
+              const isVod = stream.yt_video_id && !stream.yt_is_live;
+              if (filter === 'live') return !!isLive;
+              if (filter === 'vod') return !!isVod;
+              return true;
+            });
+
+            if (streams.length === 0) {
+              return (
+                <div className="col-span-full py-20 text-center text-gray-500 font-medium">
+                  Tidak ada data terbaru...
+                </div>
+              );
+            }
+
+            if (filteredStreams.length === 0 && filter !== 'all') {
+              return (
+                <div className="col-span-full py-20 text-center text-gray-500 font-medium">
+                  Tidak ada streamer yang {filter === 'live' ? 'sedang LIVE' : 'memiliki VOD terbaru'} saat ini.
+                </div>
+              );
+            }
+
+            return filteredStreams.map((stream) => (
               <StreamCard
                 key={stream.id}
                 stream={stream}
                 accent={color}
-                onLiveStatusChange={handleLiveStatus}
               />
-            ))
-          )}
+            ));
+          })()}
         </div>
       </div>
     </section>

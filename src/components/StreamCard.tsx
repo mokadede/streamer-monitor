@@ -1,15 +1,13 @@
-import { useEffect } from 'react';
+
 import { Eye, Clock } from 'lucide-react';
 import type { StreamData } from '../types';
 
 export default function StreamCard({
   stream,
-  accent,
-  onLiveStatusChange
+  accent
 }: {
   stream: StreamData;
   accent: string;
-  onLiveStatusChange?: (id: string, status: 'LIVE' | 'VOD' | 'OFFLINE') => void;
 }) {
   const loading = false;
   const ytData = stream.yt_video_id ? {
@@ -22,18 +20,6 @@ export default function StreamCard({
     videoUrl: `https://www.youtube.com/watch?v=${stream.yt_video_id}`,
     isLive: stream.yt_is_live
   } : null;
-
-  useEffect(() => {
-    if (!loading) {
-      if (!ytData) {
-        onLiveStatusChange?.(stream.id, 'OFFLINE');
-      } else if (ytData.isLive) {
-        onLiveStatusChange?.(stream.id, 'LIVE');
-      } else {
-        onLiveStatusChange?.(stream.id, 'VOD');
-      }
-    }
-  }, [loading, ytData, stream.id, onLiveStatusChange]);
 
   if (!loading && !ytData) {
     return null;
