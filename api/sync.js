@@ -3,13 +3,13 @@ import { createClient } from '@supabase/supabase-js';
 export default async function handler(request, response) {
   try {
     const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-    const SUPABASE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY; // Or Service Role Key
+    const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY; // Kunci rahasia khusus backend
 
-    if (!SUPABASE_URL || !SUPABASE_KEY) {
-      return response.status(500).json({ error: 'Missing Supabase URL or Key' });
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+      return response.status(500).json({ error: 'Missing Supabase URL or Service Role Key' });
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
     // API Keys Fallback Array
     const API_KEYS = [

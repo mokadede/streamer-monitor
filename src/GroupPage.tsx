@@ -18,14 +18,14 @@ export interface StreamData {
   yt_last_updated?: string;
 }
 
-export default function GroupPage({ 
-  title, 
-  color, 
+export default function GroupPage({
+  title,
+  color,
   streams = [], // Default ke array kosong, nanti diisi data dari Supabase
-  onBack 
-}: { 
-  title: string; 
-  color: string; 
+  onBack
+}: {
+  title: string;
+  color: string;
   streams?: StreamData[];
   onBack?: () => void;
 }) {
@@ -198,14 +198,14 @@ export default function GroupPage({
         >
           {streams.length === 0 ? (
             <div className="col-span-full py-20 text-center text-gray-500 font-medium">
-              Data dari Supabase akan muncul di sini...
+              Tidak ada data terbaru...
             </div>
           ) : (
             streams.map((stream) => (
-              <StreamCard 
-                key={stream.id} 
-                stream={stream} 
-                accent={color} 
+              <StreamCard
+                key={stream.id}
+                stream={stream}
+                accent={color}
                 onLiveStatusChange={handleLiveStatus}
               />
             ))
@@ -262,7 +262,7 @@ function StreamCard({
   const displayThumbnail = ytData?.thumbnailUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=640&h=360';
   const displayViewers = ytData?.viewers || '0';
   const displayUptime = ytData?.uptime || '...';
-  
+
   // Gunakan data dari YouTube API jika ada, jika tidak ada fallback ke UI-Avatars
   const displayAvatar = ytData?.channelAvatar || stream.avatarUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(displayChannel) + '&background=random';
 

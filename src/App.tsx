@@ -144,7 +144,6 @@ export default function App() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Gagal mengambil data dari Supabase:', error);
         return;
       }
 
