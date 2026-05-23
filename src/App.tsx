@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import GroupPage, { type StreamData } from './GroupPage';
+import { supabase } from './lib/supabase';
 import b2fLogo from './assets/images/b2f.png';
 import o2hLogo from './assets/images/o2h.png';
 import aaLogo from './assets/images/aaa.png';
@@ -13,6 +15,7 @@ const IMAGES = [
     aspect: '1 / 1',
     centerScale: { desktop: 0.75, mobile: 0.8 },
     text: 'B2F',
+    route: '/b2f',
   },
   {
     src: aaLogo,
@@ -21,6 +24,7 @@ const IMAGES = [
     aspect: '1/1',
     centerScale: { desktop: 0.85, mobile: 1 },
     text: 'AAA CLAN',
+    route: '/aaa',
   },
   {
     src: o2hLogo,
@@ -29,6 +33,7 @@ const IMAGES = [
     aspect: '1 / 1',
     centerScale: { desktop: 0.85, mobile: 1 },
     text: 'O2H',
+    route: '/o2h',
   },
 ];
 
@@ -122,11 +127,48 @@ function getRoleStyle(
 }
 
 /* ─── Component ────────────────────────────────────────────── */
-export default function ToonHub() {
+export default function App() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showDiscover, setShowDiscover] = useState(false);
+  const [supabaseStreams, setSupabaseStreams] = useState<StreamData[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /* Fetch Supabase Data */
+  useEffect(() => {
+    const fetchStreams = async () => {
+      const { data, error } = await supabase
+        .from('streams')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Gagal mengambil data dari Supabase:', error);
+        return;
+      }
+
+      if (data) {
+        const mappedStreams: StreamData[] = data.map((item: any) => ({
+          id: item.id,
+          url: item.channel_id,
+          grup: item.grup,
+          yt_title: item.yt_title,
+          yt_channel_name: item.yt_channel_name,
+          yt_thumbnail_url: item.yt_thumbnail_url,
+          yt_channel_avatar: item.yt_channel_avatar,
+          yt_viewers: item.yt_viewers,
+          yt_uptime: item.yt_uptime,
+          yt_video_id: item.yt_video_id,
+          yt_is_live: item.yt_is_live,
+          yt_last_updated: item.yt_last_updated,
+        }));
+        setSupabaseStreams(mappedStreams);
+      }
+    };
+
+    fetchStreams();
+  }, []);
 
   /* Preload images */
   useEffect(() => {
@@ -165,16 +207,22 @@ export default function ToonHub() {
   );
 
   return (
-    <div
-      style={{
-        backgroundColor: IMAGES[activeIndex].bg,
-        transition: `background-color ${DURATION}ms ${EASE}`,
-        fontFamily: "'Inter', sans-serif",
-      }}
-      className="relative w-full overflow-hidden"
-    >
-      {/* Viewport container */}
-      <div className="relative w-full" style={{ height: '100vh', overflow: 'hidden' }}>
+    <div className="w-full h-screen overflow-hidden relative">
+      <div 
+        className="w-full h-[200vh] flex flex-col transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]"
+        style={{ transform: showDiscover ? 'translateY(-100vh)' : 'translateY(0)' }}
+      >
+        {/* 1 ─ Viewport container: Carousel (100vh) */}
+        <div
+          style={{
+            backgroundColor: IMAGES[activeIndex].bg,
+            transition: `background-color ${DURATION}ms ${EASE}`,
+            fontFamily: "'Inter', sans-serif",
+            height: '100vh',
+            width: '100vw',
+          }}
+          className="relative overflow-hidden shrink-0"
+        >
 
         {/* 1 ─ Grain overlay */}
         <div
@@ -368,14 +416,11 @@ export default function ToonHub() {
           </div>
         </div>
 
-        {/* 6 ─ Bottom-right "DISCOVER IT" link */}
-        <div
-          className="absolute bottom-6 right-4 sm:bottom-20 sm:right-10"
-          style={{ zIndex: 60 }}
-        >
-          <a
-            href="#"
-            className="flex items-center gap-2"
+        {/* 6 ─ Bottom-right CTA */}
+        <div className="absolute bottom-6 right-4 sm:bottom-20 sm:right-16 z-50">
+          <button
+            onClick={() => setShowDiscover(true)}
+            className="flex items-center gap-3 sm:gap-4 hover:scale-105 transition-transform cursor-pointer"
             style={{
               fontFamily: "'Anton', sans-serif",
               fontSize: 'clamp(20px, 4vw, 56px)',
@@ -385,7 +430,8 @@ export default function ToonHub() {
               letterSpacing: '-0.02em',
               lineHeight: 1,
               textTransform: 'uppercase',
-              textDecoration: 'none',
+              background: 'transparent',
+              border: 'none',
               transition: 'opacity 200ms',
             }}
             onMouseEnter={(e) => {
@@ -397,7 +443,24 @@ export default function ToonHub() {
           >
             DISCOVER IT
             <ArrowRight className="w-5 h-5 sm:w-8 sm:h-8" strokeWidth={2.25} />
-          </a>
+          </button>
+        </div>
+        </div>
+      
+        {/* 2 ─ Viewport container: Discover Section (100vh) */}
+        <div className="w-screen h-screen overflow-y-auto overflow-x-hidden relative shrink-0 bg-[#0a0a0c]">
+          {showDiscover && (
+            <GroupPage
+              title={IMAGES[activeIndex].text}
+              color={IMAGES[activeIndex].bg}
+              streams={supabaseStreams.filter((stream) => {
+                const dbGrup = (stream.grup || '').toLowerCase().trim();
+                const appGrup = IMAGES[activeIndex].route.replace('/', '').toLowerCase().trim();
+                return dbGrup === appGrup || dbGrup === IMAGES[activeIndex].text.toLowerCase().trim();
+              })}
+              onBack={() => setShowDiscover(false)}
+            />
+          )}
         </div>
       </div>
     </div>
