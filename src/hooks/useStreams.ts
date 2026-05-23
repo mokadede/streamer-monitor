@@ -27,9 +27,10 @@ export function useStreams() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchStreams = async () => {
+    const fetchStreams = async (bypassCache = false) => {
       try {
-        const response = await fetch('/api/streams');
+        const url = bypassCache ? `/api/streams?t=${Date.now()}` : '/api/streams';
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Failed to fetch streams');
         }
@@ -55,6 +56,36 @@ export function useStreams() {
           // Hanya tampilkan stream yang LIVE atau VOD yang masih < 24 jam
           const visibleStreams = mappedStreams.filter(isStreamVisible);
           setStreams(visibleStreams);
+
+          // ── Opsi 1: Pemicu Sinkronisasi dari Sisi Klien ──
+          // Jangan memicu jika ini sudah merupakan re-fetch dengan cache bypass
+          if (!bypassCache) {
+            let latestUpdatedMs = 0;
+            mappedStreams.forEach((stream) => {
+              if (stream.yt_last_updated) {
+                const time = new Date(stream.yt_last_updated).getTime();
+                if (time > latestUpdatedMs) {
+                  latestUpdatedMs = time;
+                }
+              }
+            });
+
+            const now = Date.now();
+            const fiveMinutes = 5 * 60 * 1000;
+            const isStale = (now - latestUpdatedMs) > fiveMinutes;
+
+            if (isStale) {
+              console.log('[Sync Hook] Data sudah usang (> 5 menit). Memicu sinkronisasi latar belakang...');
+              fetch('/api/sync')
+                .then(res => res.json())
+                .then(resData => {
+                  console.log('[Sync Hook] Hasil sinkronisasi latar belakang:', resData);
+                  // Ambil data terbaru langsung dari DB tanpa cache
+                  fetchStreams(true);
+                })
+                .catch(err => console.error('[Sync Hook] Gagal memicu sinkronisasi latar belakang:', err));
+            }
+          }
         }
       } catch (err: any) {
         setError(err.message || 'Unknown error');

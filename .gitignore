@@ -25,3 +25,4 @@ dist-ssr
 .env
 doc.md
 .gitignore
+testsprite_tests\tmp\config.json
