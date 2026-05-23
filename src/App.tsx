@@ -206,18 +206,18 @@ export default function App() {
   );
 
   return (
-    <div className="w-full h-screen overflow-hidden relative">
+    <div className="w-full h-[100dvh] overflow-hidden relative">
       <div
-        className="w-full h-[200vh] flex flex-col transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]"
-        style={{ transform: showDiscover ? 'translateY(-100vh)' : 'translateY(0)' }}
+        className="w-full h-[200dvh] flex flex-col transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]"
+        style={{ transform: showDiscover ? 'translateY(-100dvh)' : 'translateY(0)' }}
       >
-        {/* 1 ─ Viewport container: Carousel (100vh) */}
+        {/* 1 ─ Viewport container: Carousel (100dvh) */}
         <div
           style={{
             backgroundColor: IMAGES[activeIndex].bg,
             transition: `background-color ${DURATION}ms ${EASE}`,
             fontFamily: "'Inter', sans-serif",
-            height: '100vh',
+            height: '100dvh',
             width: '100vw',
           }}
           className="relative overflow-hidden shrink-0"
@@ -337,7 +337,7 @@ export default function App() {
 
           {/* 5 ─ Bottom-left text + nav buttons */}
           <div
-            className="absolute bottom-6 left-4 sm:bottom-20 sm:left-24"
+            className="absolute bottom-10 left-4 sm:bottom-20 sm:left-24"
             style={{ zIndex: 60, maxWidth: 320 }}
           >
             {/* <p
@@ -416,7 +416,7 @@ export default function App() {
           </div>
 
           {/* 6 ─ Bottom-right CTA */}
-          <div className="absolute bottom-6 right-4 sm:bottom-20 sm:right-16 z-50">
+          <div className="absolute bottom-10 right-4 sm:bottom-20 sm:right-16 z-50">
             <button
               onClick={() => setShowDiscover(true)}
               className="flex items-center gap-3 sm:gap-4 hover:scale-105 transition-transform cursor-pointer"
@@ -446,8 +446,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* 2 ─ Viewport container: Discover Section (100vh) */}
-        <div className="w-screen h-screen overflow-y-auto overflow-x-hidden relative shrink-0 bg-[#0a0a0c]">
+        {/* 2 ─ Viewport container: Discover Section (100dvh) */}
+        <div className="w-screen h-[100dvh] overflow-y-auto overflow-x-hidden relative shrink-0 bg-[#0a0a0c]">
           {showDiscover && (
             <GroupPage
               title={IMAGES[activeIndex].text}
