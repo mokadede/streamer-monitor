@@ -101,6 +101,7 @@ export async function processStream(stream) {
 
     let uptimeString = 'Offline';
     let viewers = '0';
+    let endedAt = null;
 
     if (isLive) {
       const start = new Date(activeVideo.liveStreamingDetails.actualStartTime);
@@ -116,9 +117,11 @@ export async function processStream(stream) {
       }
       if (activeVideo.liveStreamingDetails?.actualEndTime) {
         const ended = new Date(activeVideo.liveStreamingDetails.actualEndTime);
+        endedAt = ended.toISOString();
         uptimeString = `Selesai ${ended.toLocaleDateString()}`;
       } else if (activeVideo.snippet?.publishedAt) {
         const published = new Date(activeVideo.snippet.publishedAt);
+        endedAt = published.toISOString();
         uptimeString = `Selesai ${published.toLocaleDateString()}`;
       }
     }
@@ -132,6 +135,7 @@ export async function processStream(stream) {
       yt_uptime: uptimeString,
       yt_video_id: activeVideo.id,
       yt_is_live: isLive,
+      yt_ended_at: isLive ? null : endedAt, // null saat live, ISO timestamp saat VOD
       yt_last_updated: new Date().toISOString(),
     };
 

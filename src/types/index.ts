@@ -12,5 +12,6 @@ export interface StreamData {
   yt_video_id?: string;
   yt_is_live?: boolean;
   yt_last_updated?: string;
-  yt_uploads_id?: string; // DB cache: disimpan sekali, menghemat quota /channels endpoint
+  yt_ended_at?: string | null;    // ISO timestamp saat VOD selesai, null jika sedang live
+  yt_uploads_id?: string;         // DB cache: disimpan sekali, menghemat quota /channels endpoint
 }

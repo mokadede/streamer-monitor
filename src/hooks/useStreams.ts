@@ -1,6 +1,26 @@
 import { useState, useEffect } from 'react';
 import type { StreamData } from '../types';
 
+const VOD_MAX_AGE_HOURS = 24;
+
+/**
+ * Menentukan apakah sebuah VOD masih layak ditampilkan.
+ * - Jika stream sedang LIVE → selalu tampil.
+ * - Jika VOD dan yt_ended_at belum diisi → tampil (data lama, belum di-sync).
+ * - Jika VOD dan yt_ended_at sudah > 24 jam yang lalu → TIDAK ditampilkan.
+ */
+function isStreamVisible(stream: StreamData): boolean {
+  if (stream.yt_is_live) return true;
+
+  if (!stream.yt_ended_at) return true; // data lama sebelum kolom yt_ended_at ada
+
+  const endedAt = new Date(stream.yt_ended_at).getTime();
+  const ageMs = Date.now() - endedAt;
+  const ageLimitMs = VOD_MAX_AGE_HOURS * 60 * 60 * 1000;
+
+  return ageMs <= ageLimitMs;
+}
+
 export function useStreams() {
   const [streams, setStreams] = useState<StreamData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,8 +49,12 @@ export function useStreams() {
             yt_video_id: item.yt_video_id,
             yt_is_live: item.yt_is_live,
             yt_last_updated: item.yt_last_updated,
+            yt_ended_at: item.yt_ended_at,
           }));
-          setStreams(mappedStreams);
+
+          // Hanya tampilkan stream yang LIVE atau VOD yang masih < 24 jam
+          const visibleStreams = mappedStreams.filter(isStreamVisible);
+          setStreams(visibleStreams);
         }
       } catch (err: any) {
         setError(err.message || 'Unknown error');
