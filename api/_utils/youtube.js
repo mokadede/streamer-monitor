@@ -1,5 +1,13 @@
 let currentKeyIndex = 0;
 
+// ──────────────────────────────────────────────
+// In-memory Request Cache (Level 1)
+// Mencegah hit API yang sama dalam 1 siklus sync.
+// Key: URL string, Value: { data, expiresAt }
+// ──────────────────────────────────────────────
+const requestCache = new Map();
+const REQUEST_CACHE_TTL_MS = 5 * 60 * 1000; // 5 menit
+
 export function getApiKeys() {
   return [
     process.env.VITE_YOUTUBE_API_KEY || process.env.YOUTUBE_API_KEY,
@@ -32,7 +40,24 @@ export function formatNumber(num) {
   return n.toString();
 }
 
+/**
+ * Fetch dengan in-memory cache dan API key fallback.
+ * Jika URL yang sama sudah pernah di-fetch dalam 5 menit terakhir,
+ * hasilnya langsung dikembalikan dari cache tanpa hit API YouTube.
+ */
 export async function fetchWithFallback(urlFn) {
+  // Buat cache key dari URL menggunakan key saat ini
+  // (tanpa API key itu sendiri agar key rotation tidak merusak cache)
+  const cacheKey = urlFn('__KEY_PLACEHOLDER__');
+
+  // Cek in-memory cache
+  const cached = requestCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    console.log(`[Cache HIT] ${cacheKey.split('?')[0]}`);
+    return cached.data;
+  }
+
+  // Tidak ada cache, fetch dari YouTube API
   while (true) {
     const url = urlFn(getApiKey());
     const res = await fetch(url);
@@ -45,6 +70,29 @@ export async function fetchWithFallback(urlFn) {
         throw new Error('All API Keys exhausted');
       }
     }
+
+    // Simpan ke in-memory cache
+    requestCache.set(cacheKey, {
+      data,
+      expiresAt: Date.now() + REQUEST_CACHE_TTL_MS,
+    });
+
     return data;
   }
+}
+
+/**
+ * Membersihkan semua cache yang sudah expired.
+ * Dipanggil di awal setiap siklus sync untuk manajemen memori.
+ */
+export function pruneExpiredCache() {
+  const now = Date.now();
+  let pruned = 0;
+  for (const [key, value] of requestCache.entries()) {
+    if (value.expiresAt <= now) {
+      requestCache.delete(key);
+      pruned++;
+    }
+  }
+  if (pruned > 0) console.log(`[Cache] Pruned ${pruned} expired entries.`);
 }

@@ -1,6 +1,6 @@
 import { supabase } from './_utils/supabase.js';
 import { processStream } from './_utils/streamProcessor.js';
-import { getApiKeys } from './_utils/youtube.js';
+import { getApiKeys, pruneExpiredCache } from './_utils/youtube.js';
 
 export default async function handler(request, response) {
   try {
@@ -8,7 +8,10 @@ export default async function handler(request, response) {
       return response.status(500).json({ error: 'Missing YouTube API Keys' });
     }
 
-    // Ambil data
+    // Bersihkan in-memory cache yang sudah expired sebelum mulai sync cycle
+    pruneExpiredCache();
+
+    // Ambil semua data stream dari DB (termasuk yt_uploads_id untuk DB cache)
     const { data: streams, error } = await supabase.from('streams').select('*');
     if (error) {
       return response.status(500).json({ error: error.message });

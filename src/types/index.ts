@@ -12,4 +12,5 @@ export interface StreamData {
   yt_video_id?: string;
   yt_is_live?: boolean;
   yt_last_updated?: string;
+  yt_uploads_id?: string; // DB cache: disimpan sekali, menghemat quota /channels endpoint
 }
