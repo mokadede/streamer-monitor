@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import GroupPage, { type StreamData } from './GroupPage';
 import { supabase } from './lib/supabase';
 import b2fLogo from './assets/images/b2f.png';
