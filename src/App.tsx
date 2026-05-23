@@ -5,6 +5,7 @@ import { supabase } from './lib/supabase';
 import b2fLogo from './assets/images/b2f.png';
 import o2hLogo from './assets/images/o2h.png';
 import aaLogo from './assets/images/aaa.png';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 /* ─── Image Data ───────────────────────────────────────────── */
 const IMAGES = [
@@ -462,6 +463,7 @@ export default function App() {
           )}
         </div>
       </div>
+      <SpeedInsights />
     </div>
   );
 }
