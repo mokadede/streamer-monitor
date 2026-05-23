@@ -1,50 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import GroupPage, { type StreamData } from './GroupPage';
-import { supabase } from './lib/supabase';
-import b2fLogo from './assets/images/b2f.png';
-import o2hLogo from './assets/images/o2h.png';
-import aaLogo from './assets/images/aaa.png';
+import GroupPage from './GroupPage';
+import { useStreams } from './hooks/useStreams';
+import { IMAGES, GRAIN_SVG, EASE, DURATION } from './constants';
 
-/* ─── Image Data ───────────────────────────────────────────── */
-const IMAGES = [
-  {
-    src: b2fLogo,
-    bg: '#F5A623',
-    panel: '#F7B84E',
-    aspect: '1 / 1',
-    centerScale: { desktop: 0.75, mobile: 0.71 },
-    text: 'B2F',
-    route: '/b2f',
-  },
-  {
-    src: aaLogo,
-    bg: '#E882B4',
-    panel: '#ED9DC4',
-    aspect: '1/1',
-    centerScale: { desktop: 0.85, mobile: 1 },
-    text: 'AAA CLAN',
-    route: '/aaa',
-  },
-  {
-    src: o2hLogo,
-    bg: '#10B981',
-    panel: '#34D399',
-    aspect: '1 / 1',
-    centerScale: { desktop: 0.85, mobile: 0.98 },
-    text: 'O2H',
-    route: '/o2h',
-  },
-];
-
-/* ─── Grain Overlay SVG (fractalNoise) ─────────────────────── */
-const GRAIN_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)' opacity='0.08'/%3E%3C/svg%3E")`;
-
-/* ─── Easing ───────────────────────────────────────────────── */
-const EASE = 'cubic-bezier(0.4, 0, 0.2, 1)';
-const DURATION = 650; // ms
-
-/* ─── Role helpers ─────────────────────────────────────────── */
 type Role = 'center' | 'left' | 'right' | 'back';
 
 function getRole(index: number, activeIndex: number): Role {
@@ -126,48 +85,14 @@ function getRoleStyle(
   }
 }
 
-/* ─── Component ────────────────────────────────────────────── */
 export default function App() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showDiscover, setShowDiscover] = useState(false);
-  const [supabaseStreams, setSupabaseStreams] = useState<StreamData[]>([]);
+  
+  const { streams: supabaseStreams } = useStreams();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  /* Fetch Supabase Data */
-  useEffect(() => {
-    const fetchStreams = async () => {
-      const { data, error } = await supabase
-        .from('streams')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        return;
-      }
-
-      if (data) {
-        const mappedStreams: StreamData[] = data.map((item: any) => ({
-          id: item.id,
-          url: item.channel_id,
-          grup: item.grup,
-          yt_title: item.yt_title,
-          yt_channel_name: item.yt_channel_name,
-          yt_thumbnail_url: item.yt_thumbnail_url,
-          yt_channel_avatar: item.yt_channel_avatar,
-          yt_viewers: item.yt_viewers,
-          yt_uptime: item.yt_uptime,
-          yt_video_id: item.yt_video_id,
-          yt_is_live: item.yt_is_live,
-          yt_last_updated: item.yt_last_updated,
-        }));
-        setSupabaseStreams(mappedStreams);
-      }
-    };
-
-    fetchStreams();
-  }, []);
 
   /* Preload images */
   useEffect(() => {
@@ -211,7 +136,6 @@ export default function App() {
         className="w-full h-[200dvh] flex flex-col transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]"
         style={{ transform: showDiscover ? 'translateY(-100dvh)' : 'translateY(0)' }}
       >
-        {/* 1 ─ Viewport container: Carousel (100dvh) */}
         <div
           style={{
             backgroundColor: IMAGES[activeIndex].bg,
@@ -222,8 +146,6 @@ export default function App() {
           }}
           className="relative overflow-hidden shrink-0"
         >
-
-          {/* 1 ─ Grain overlay */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
@@ -235,7 +157,6 @@ export default function App() {
             }}
           />
 
-          {/* 2 ─ Giant ghost text (BEHIND logo) */}
           <div
             className="absolute inset-x-0 flex items-center justify-center pointer-events-none select-none"
             style={{ zIndex: 2, top: '27%' }}
@@ -263,24 +184,6 @@ export default function App() {
             ))}
           </div>
 
-          {/* 3 ─ Top-left brand label */}
-          {/* <div
-          className="absolute top-6 left-4 sm:left-8"
-          style={{ zIndex: 60 }}
-        >
-          <span
-            className="text-xs font-semibold uppercase"
-            style={{
-              color: 'white',
-              opacity: 0.9,
-              letterSpacing: '0.18em',
-            }}
-          >
-            TOONHUB
-          </span>
-        </div> */}
-
-          {/* 4 ─ Carousel */}
           <div className="absolute inset-0" style={{ zIndex: 3 }}>
             {IMAGES.map((item, index) => {
               const role = getRole(index, activeIndex);
@@ -307,7 +210,6 @@ export default function App() {
             })}
           </div>
 
-          {/* 4.5 ─ Giant ghost text outline (IN FRONT of logo) */}
           <div
             className="absolute inset-x-0 flex items-center justify-center pointer-events-none select-none"
             style={{ zIndex: 4, top: '27%' }}
@@ -335,37 +237,10 @@ export default function App() {
             ))}
           </div>
 
-          {/* 5 ─ Bottom-left text + nav buttons */}
           <div
             className="absolute bottom-10 left-4 sm:bottom-20 sm:left-24"
             style={{ zIndex: 60, maxWidth: 320 }}
           >
-            {/* <p
-              className="mb-2 sm:mb-3 text-base sm:text-[22px]"
-              style={{
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.02em',
-                color: 'white',
-                opacity: 0.95,
-              }}
-            >
-              Live HUB
-            </p>
-
-            <p
-              className="hidden sm:block text-xs sm:text-sm mb-4 sm:mb-5"
-              style={{
-                color: 'white',
-                opacity: 0.85,
-                lineHeight: 1.6,
-              }}
-            >
-              The artwork is stunning, shipped fully prepared. The finish is a
-              vision, the 3D craft is flawless. Many thanks! Wishing you the win.
-              Order now.
-            </p> */}
-
             <div className="flex items-center gap-3">
               <button
                 id="nav-prev"
@@ -415,7 +290,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* 6 ─ Bottom-right CTA */}
           <div className="absolute bottom-10 right-4 sm:bottom-20 sm:right-16 z-50">
             <button
               onClick={() => setShowDiscover(true)}
@@ -446,7 +320,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* 2 ─ Viewport container: Discover Section (100dvh) */}
         <div className="w-screen h-[100dvh] overflow-y-auto overflow-x-hidden relative shrink-0 bg-[#0a0a0c]">
           {showDiscover && (
             <GroupPage
