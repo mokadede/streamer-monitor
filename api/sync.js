@@ -102,9 +102,11 @@ export default async function handler(request, response) {
         const videosData = await fetchWithFallback(key => `https://youtube.googleapis.com/youtube/v3/videos?part=snippet,liveStreamingDetails,statistics&id=${videoIds}&key=${key}`);
         if (!videosData.items || videosData.items.length === 0) return;
 
-        let activeVideo = videosData.items.find(v => v.liveStreamingDetails && v.liveStreamingDetails.concurrentViewers);
+        // Prioritas 1: Cari video yang status broadcast-nya BENAR-BENAR 'live'
+        let activeVideo = videosData.items.find(v => v.snippet?.liveBroadcastContent === 'live');
         let isLive = !!activeVideo;
 
+        // Prioritas 2: Jika tidak ada yang live, cari VOD terbaru
         if (!activeVideo) {
           activeVideo = videosData.items.find(v => v.liveStreamingDetails);
         }
