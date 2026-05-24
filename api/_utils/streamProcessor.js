@@ -88,19 +88,17 @@ export async function processStream(stream) {
     );
     if (!videosData.items || videosData.items.length === 0) return;
 
-    // Prioritas 1: Cari video yang status broadcast-nya 'live' atau 'upcoming'
+    // Prioritas 1: Cari video yang status broadcast-nya 'live'
     let activeVideo = videosData.items.find(v => v.snippet?.liveBroadcastContent === 'live');
     let isLive = !!activeVideo;
     let isUpcoming = false;
 
-    if (!activeVideo) {
-      activeVideo = videosData.items.find(v => v.snippet?.liveBroadcastContent === 'upcoming');
-      if (activeVideo) isUpcoming = true;
-    }
-
-    // Prioritas 2: Jika tidak ada yang live/upcoming, cari VOD terbaru
+    // Prioritas 2: Jika tidak ada yang live, cari video terbaru yang memiliki liveStreamingDetails (VOD atau Upcoming)
     if (!activeVideo) {
       activeVideo = videosData.items.find(v => v.liveStreamingDetails);
+      if (activeVideo && activeVideo.snippet?.liveBroadcastContent === 'upcoming') {
+        isUpcoming = true;
+      }
     }
 
     if (!activeVideo) return;
