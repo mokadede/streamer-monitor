@@ -132,6 +132,19 @@ export default function App() {
 
   return (
     <div className="w-full h-[100dvh] overflow-hidden relative">
+      {/* Visually hidden h1 for search engine optimization (SEO) */}
+      <h1 style={{
+        position: 'absolute',
+        width: 1,
+        height: 1,
+        padding: 0,
+        margin: -1,
+        overflow: 'hidden',
+        clip: 'rect(0, 0, 0, 0)',
+        border: 0
+      }}>
+        Streamer Monitor - B2F, AAA Clan, O2H Livestream Dashboard
+      </h1>
       <div
         className="w-full h-[200dvh] flex flex-col transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]"
         style={{ transform: showDiscover ? 'translateY(-100dvh)' : 'translateY(0)' }}
