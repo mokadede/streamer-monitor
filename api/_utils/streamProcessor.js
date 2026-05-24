@@ -118,7 +118,7 @@ export async function processStream(stream) {
     } else if (isUpcoming) {
       if (activeVideo.liveStreamingDetails?.scheduledStartTime) {
         const scheduled = new Date(activeVideo.liveStreamingDetails.scheduledStartTime);
-        uptimeString = `Dimulai ${scheduled.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+        uptimeString = `Dimulai ${scheduled.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit' })}`;
       } else {
         uptimeString = 'Segera Mulai';
       }
@@ -130,11 +130,11 @@ export async function processStream(stream) {
       if (activeVideo.liveStreamingDetails?.actualEndTime) {
         const ended = new Date(activeVideo.liveStreamingDetails.actualEndTime);
         endedAt = ended.toISOString();
-        uptimeString = `Selesai ${ended.toLocaleDateString('id-ID')}`;
+        uptimeString = `Selesai ${ended.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta' })}`;
       } else if (activeVideo.snippet?.publishedAt) {
         const published = new Date(activeVideo.snippet.publishedAt);
         endedAt = published.toISOString();
-        uptimeString = `Selesai ${published.toLocaleDateString('id-ID')}`;
+        uptimeString = `Selesai ${published.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta' })}`;
       }
     }
 
