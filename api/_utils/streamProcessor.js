@@ -88,11 +88,17 @@ export async function processStream(stream) {
     );
     if (!videosData.items || videosData.items.length === 0) return;
 
-    // Prioritas 1: Cari video yang status broadcast-nya BENAR-BENAR 'live'
+    // Prioritas 1: Cari video yang status broadcast-nya 'live' atau 'upcoming'
     let activeVideo = videosData.items.find(v => v.snippet?.liveBroadcastContent === 'live');
     let isLive = !!activeVideo;
+    let isUpcoming = false;
 
-    // Prioritas 2: Jika tidak ada yang live, cari VOD terbaru
+    if (!activeVideo) {
+      activeVideo = videosData.items.find(v => v.snippet?.liveBroadcastContent === 'upcoming');
+      if (activeVideo) isUpcoming = true;
+    }
+
+    // Prioritas 2: Jika tidak ada yang live/upcoming, cari VOD terbaru
     if (!activeVideo) {
       activeVideo = videosData.items.find(v => v.liveStreamingDetails);
     }
@@ -111,6 +117,14 @@ export async function processStream(stream) {
       const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
       uptimeString = diffHrs > 0 ? `${diffHrs}h ${diffMins}m` : `${diffMins} min`;
       viewers = formatNumber(activeVideo.liveStreamingDetails.concurrentViewers);
+    } else if (isUpcoming) {
+      if (activeVideo.liveStreamingDetails?.scheduledStartTime) {
+        const scheduled = new Date(activeVideo.liveStreamingDetails.scheduledStartTime);
+        uptimeString = `Dimulai ${scheduled.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+      } else {
+        uptimeString = 'Segera Mulai';
+      }
+      viewers = 'Waiting';
     } else {
       if (activeVideo.statistics?.viewCount) {
         viewers = formatNumber(activeVideo.statistics.viewCount);
@@ -118,11 +132,11 @@ export async function processStream(stream) {
       if (activeVideo.liveStreamingDetails?.actualEndTime) {
         const ended = new Date(activeVideo.liveStreamingDetails.actualEndTime);
         endedAt = ended.toISOString();
-        uptimeString = `Selesai ${ended.toLocaleDateString()}`;
+        uptimeString = `Selesai ${ended.toLocaleDateString('id-ID')}`;
       } else if (activeVideo.snippet?.publishedAt) {
         const published = new Date(activeVideo.snippet.publishedAt);
         endedAt = published.toISOString();
-        uptimeString = `Selesai ${published.toLocaleDateString()}`;
+        uptimeString = `Selesai ${published.toLocaleDateString('id-ID')}`;
       }
     }
 

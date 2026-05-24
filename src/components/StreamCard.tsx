@@ -25,6 +25,8 @@ export default function StreamCard({
     return null;
   }
 
+  const isUpcoming = ytData?.viewers === 'Waiting' || ytData?.uptime?.startsWith('Dimulai') || ytData?.uptime?.startsWith('Segera');
+
   const displayTitle = ytData?.title || 'Memuat data...';
   const displayChannel = ytData?.channelName || 'Memuat channel...';
   const displayThumbnail = ytData?.thumbnailUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=640&h=360';
@@ -99,7 +101,7 @@ export default function StreamCard({
             display: 'flex',
             alignItems: 'center',
             gap: 5,
-            background: ytData?.isLive ? 'rgba(220,38,38,0.92)' : 'rgba(75,85,99,0.92)',
+            background: ytData?.isLive ? 'rgba(220,38,38,0.92)' : isUpcoming ? 'rgba(217,119,6,0.92)' : 'rgba(75,85,99,0.92)',
             backdropFilter: 'blur(8px)',
             padding: '4px 10px',
             borderRadius: 6,
@@ -120,7 +122,7 @@ export default function StreamCard({
               }}
             />
           )}
-          {ytData?.isLive ? 'LIVE' : 'VOD'}
+          {ytData?.isLive ? 'LIVE' : isUpcoming ? 'UPCOMING' : 'VOD'}
         </div>
         <div style={{ position: 'absolute', bottom: 10, right: 12, display: 'flex', gap: 8 }}>
           <div
